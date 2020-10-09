@@ -42,22 +42,28 @@ impl WinRule {
             d: Box::new(|b, c| c == 2 && b[c] == b[c + 2] && b[c] == b[c + 4]),
         }
     }
-    fn matches(&self, b: &[Option<C>], c: usize) -> Option<WinLayout> {
-        // return early if b[c] is none
-        b[c].as_ref()?;
+    fn matches(&self, b: &[Option<C>], c: usize) -> Vec<WinLayout> {
+        let mut v = vec![];
+
+        if b[c].is_none() {
+            return v;
+        }
 
         use WinLayout::*;
         if (self.a)(b, c) {
-            Some(A)
-        } else if (self.b)(b, c) {
-            Some(B)
-        } else if (self.c)(b, c) {
-            Some(C)
-        } else if (self.d)(b, c) {
-            Some(D)
-        } else {
-            None
+            v.push(A);
         }
+        if (self.b)(b, c) {
+            v.push(B);
+        }
+        if (self.c)(b, c) {
+            v.push(C);
+        }
+        if (self.d)(b, c) {
+            v.push(D);
+        }
+
+        v
     }
 }
 
@@ -73,7 +79,9 @@ impl WinLayout {
         let w = match b[c].unwrap() {
             crate::C::X => Some(crate::C::XWin),
             crate::C::O => Some(crate::C::OWin),
-            _ => unreachable!(),
+            // Also it can be XWIN or OWIN
+            // No need to modify in that case
+            c => Some(c),
         };
         use WinLayout::*;
         match self {
@@ -107,23 +115,30 @@ impl Board {
         // 3 4
         // 6   8
         for c in 0..self.b.len() {
-            if let Some(wl) = self.rules.matches(&self.b, c) {
+            let wls = self.rules.matches(&self.b, c);
+            if !wls.is_empty() {
                 let msg = match self.b[c] {
                     Some(C::X) => "Human wins",
                     Some(C::O) => "Bot wins",
                     _ => unreachable!(),
                 };
-                self.render_win_board(wl, c);
+                self.render_win_board(wls, c);
 
                 println!("{}", msg);
                 println!();
                 std::process::exit(0);
             }
         }
+
+        if self.b.iter().all(|c| c.is_some()) {
+            println!("Draw!");
+            println!();
+            std::process::exit(0);
+        }
     }
 
-    fn render_win_board(&mut self, wl: WinLayout, c: usize) {
-        wl.apply_win(&mut self.b, c);
+    fn render_win_board(&mut self, wls: Vec<WinLayout>, c: usize) {
+        wls.into_iter().for_each(|wl| wl.apply_win(&mut self.b, c));
         self.render_board();
     }
 
