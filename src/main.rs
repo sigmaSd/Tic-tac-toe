@@ -13,13 +13,25 @@ fn main() {
     }
 }
 
-#[derive(PartialEq, Copy, Clone)]
+#[derive(Copy, Clone)]
 enum C {
     X,
     O,
     XWin,
     OWin,
 }
+
+impl PartialEq for C {
+    fn eq(&self, other: &Self) -> bool {
+        use C::*;
+        match (self, other) {
+            (X, X) | (X, XWin) | (XWin, X) => true,
+            (O, O) | (O, OWin) | (OWin, O) => true,
+            _ => false,
+        }
+    }
+}
+
 struct Board {
     b: [Option<C>; 9],
     rules: WinRule,
@@ -114,20 +126,25 @@ impl Board {
         // 0 1 2
         // 3 4
         // 6   8
+        let mut winner = None;
         for c in 0..self.b.len() {
             let wls = self.rules.matches(&self.b, c);
             if !wls.is_empty() {
-                let msg = match self.b[c] {
-                    Some(C::X) => "Human wins",
-                    Some(C::O) => "Bot wins",
-                    _ => unreachable!(),
-                };
-                self.render_win_board(wls, c);
-
-                println!("{}", msg);
-                println!();
-                std::process::exit(0);
+                wls.into_iter().for_each(|wl| wl.apply_win(&mut self.b, c));
+                winner = self.b[c];
             }
+        }
+        if let Some(w) = winner {
+            let msg = match w {
+                C::X | C::XWin => "Human wins",
+                C::O | C::OWin => "Bot wins",
+            };
+
+            self.render_board();
+
+            println!("{}", msg);
+            println!();
+            std::process::exit(0);
         }
 
         if self.b.iter().all(|c| c.is_some()) {
@@ -135,11 +152,6 @@ impl Board {
             println!();
             std::process::exit(0);
         }
-    }
-
-    fn render_win_board(&mut self, wls: Vec<WinLayout>, c: usize) {
-        wls.into_iter().for_each(|wl| wl.apply_win(&mut self.b, c));
-        self.render_board();
     }
 
     fn render_board(&self) {
