@@ -155,6 +155,8 @@ impl Board {
     }
 
     fn render_board(&self) {
+        let s = std::io::stdout();
+        let _s = s.lock();
         println!();
         for (i, c) in self.b.iter().enumerate() {
             if i % 3 == 0 {
