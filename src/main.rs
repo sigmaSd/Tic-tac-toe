@@ -2,6 +2,7 @@ fn main() {
     let mut b: Board = Board {
         b: [None, None, None, None, None, None, None, None, None],
         rules: WinRule::new(),
+        input: String::new(),
     };
     loop {
         b.render_board();
@@ -22,6 +23,7 @@ enum C {
 struct Board {
     b: [Option<C>; 9],
     rules: WinRule,
+    input: String,
 }
 
 struct WinRule {
@@ -160,10 +162,10 @@ impl Board {
     }
 
     fn try_play(&mut self) -> Option<()> {
-        let mut input = String::new();
-        std::io::stdin().read_line(&mut input).ok()?;
+        self.input.clear();
+        std::io::stdin().read_line(&mut self.input).ok()?;
 
-        let mut input = input.chars();
+        let mut input = self.input.chars();
         let n = input.next()?.to_digit(10)?;
         let c = input.next()?;
 
