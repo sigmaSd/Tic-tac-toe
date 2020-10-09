@@ -1,3 +1,5 @@
+use std::io::BufRead;
+
 fn main() {
     let mut b: Board = Board {
         b: [None, None, None, None, None, None, None, None, None],
@@ -173,7 +175,9 @@ impl Board {
         println!();
     }
     fn player_turn(&mut self) {
-        while self.try_play().is_none() {
+        let s = std::io::stdin();
+        let mut s = s.lock();
+        while self.try_play(&mut s).is_none() {
             eprintln!("Invalid move");
             self.render_board();
         }
@@ -190,9 +194,9 @@ impl Board {
         *self.b.iter_mut().filter(|c| c.is_none()).nth(rnd).unwrap() = Some(C::O);
     }
 
-    fn try_play(&mut self) -> Option<()> {
+    fn try_play(&mut self, s: &mut std::io::StdinLock) -> Option<()> {
         self.input.clear();
-        std::io::stdin().read_line(&mut self.input).ok()?;
+        s.read_line(&mut self.input).ok()?;
 
         let mut input = self.input.chars();
         let n = input.next()?.to_digit(10)?;
