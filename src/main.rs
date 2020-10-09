@@ -66,6 +66,39 @@ enum WinLayout {
     D, // /
 }
 
+impl WinLayout {
+    fn apply_win(&self, b: &mut [Option<C>], c: usize) {
+        let w = match b[c].unwrap() {
+            crate::C::X => Some(crate::C::XWin),
+            crate::C::O => Some(crate::C::OWin),
+            _ => unreachable!(),
+        };
+        use WinLayout::*;
+        match self {
+            A => {
+                b[c] = w;
+                b[c + 1] = w;
+                b[c + 2] = w;
+            }
+            B => {
+                b[c] = w;
+                b[(c + 3) % 9] = w;
+                b[(c + 6) % 9] = w;
+            }
+            C => {
+                b[c] = w;
+                b[c + 4] = w;
+                b[c + 8] = w;
+            }
+            D => {
+                b[c] = w;
+                b[c + 2] = w;
+                b[c + 4] = w;
+            }
+        }
+    }
+}
+
 impl Board {
     fn check_for_end(&mut self) {
         // 0 1 2
@@ -88,34 +121,7 @@ impl Board {
     }
 
     fn render_win_board(&mut self, wl: WinLayout, c: usize) {
-        let w = match self.b[c].unwrap() {
-            crate::C::X => Some(crate::C::XWin),
-            crate::C::O => Some(crate::C::OWin),
-            _ => unreachable!(),
-        };
-        use WinLayout::*;
-        match wl {
-            A => {
-                self.b[c] = w;
-                self.b[c + 1] = w;
-                self.b[c + 2] = w;
-            }
-            B => {
-                self.b[c] = w;
-                self.b[(c + 3) % 9] = w;
-                self.b[(c + 6) % 9] = w;
-            }
-            C => {
-                self.b[c] = w;
-                self.b[c + 4] = w;
-                self.b[c + 8] = w;
-            }
-            D => {
-                self.b[c] = w;
-                self.b[c + 2] = w;
-                self.b[c + 4] = w;
-            }
-        }
+        wl.apply_win(&mut self.b, c);
         self.render_board();
     }
 
