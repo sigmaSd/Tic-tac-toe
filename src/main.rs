@@ -34,26 +34,26 @@ impl PartialEq for C {
     }
 }
 
-struct Board {
+struct Board<'a> {
     b: [Option<C>; 9],
-    rules: WinRule,
+    rules: WinRule<'a>,
     input: String,
 }
 
-struct WinRule {
-    a: Box<dyn Fn(&[Option<C>], usize) -> bool>,
-    b: Box<dyn Fn(&[Option<C>], usize) -> bool>,
-    c: Box<dyn Fn(&[Option<C>], usize) -> bool>,
-    d: Box<dyn Fn(&[Option<C>], usize) -> bool>,
+struct WinRule<'a> {
+    a: &'a dyn Fn(&[Option<C>], usize) -> bool,
+    b: &'a dyn Fn(&[Option<C>], usize) -> bool,
+    c: &'a dyn Fn(&[Option<C>], usize) -> bool,
+    d: &'a dyn Fn(&[Option<C>], usize) -> bool,
 }
 
-impl WinRule {
+impl WinRule<'_> {
     fn new() -> Self {
         Self {
-            a: Box::new(|b, c| c % 3 == 0 && b[c] == b[c + 1] && b[c] == b[c + 2]),
-            b: Box::new(|b, c| b[c] == b[(c + 3) % 9] && b[c] == b[(c + 6) % 9]),
-            c: Box::new(|b, c| c == 0 && b[c] == b[c + 4] && b[c] == b[c + 8]),
-            d: Box::new(|b, c| c == 2 && b[c] == b[c + 2] && b[c] == b[c + 4]),
+            a: &(|b, c| c % 3 == 0 && b[c] == b[c + 1] && b[c] == b[c + 2]),
+            b: &(|b, c| b[c] == b[(c + 3) % 9] && b[c] == b[(c + 6) % 9]),
+            c: &(|b, c| c == 0 && b[c] == b[c + 4] && b[c] == b[c + 8]),
+            d: &(|b, c| c == 2 && b[c] == b[c + 2] && b[c] == b[c + 4]),
         }
     }
     fn matches(&self, b: &[Option<C>], c: usize) -> Vec<WinLayout> {
@@ -123,7 +123,7 @@ impl WinLayout {
     }
 }
 
-impl Board {
+impl Board<'_> {
     fn check_for_end(&mut self) {
         // 0 1 2
         // 3 4
